@@ -1,6 +1,13 @@
-const express = require('express')
-const router = express.Router()
-// const {login,signup,logout,getToken}=require("../controllers/auth")
+const express = require("express");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" }); 
+const { getInvoices, getProducts, getCustomers, uploadfile } = require("../controllers/dataController");
 
+const router = express.Router();
 
-module.exports = router
+router.get("/invoices", getInvoices);
+router.get("/products", getProducts);
+router.get("/customers", getCustomers);
+router.post("/uploadfile", upload.single("file"), uploadfile);
+
+module.exports = router;
