@@ -9,16 +9,43 @@ const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const fileManager = new GoogleAIFileManager(process.env.API_KEY);
 
 const getInvoices = async (req, res) => {
-  // Logic for fetching invoices goes here
+  try {
+    const invoices = await Receipt.find({}, { invoices: 1, _id: 1 });
+    res.status(200).json({
+      success: true,
+      data: invoices,
+    });
+  } catch (error) {
+    console.error("Error fetching invoices:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
 };
 
 const getProducts = async (req, res) => {
-  // Logic for fetching products goes here
+  try {
+    const products = await Receipt.find({}, { products: 1, _id: 1 }); 
+    res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching products:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
 };
 
 const getCustomers = async (req, res) => {
-  // Logic for fetching customers goes here
-};
+  try {
+    const customers = await Receipt.find({}, { customers: 1, _id: 1 });
+    res.status(200).json({
+      success: true,
+      data: customers, 
+    });
+  } catch (error) {
+    console.error("Error fetching customers:", error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}
 
 const uploadfile = async (req, res) => {
   try {
