@@ -199,6 +199,7 @@ const uploadfile = async (req, res) => {
       res.status(200).json({
         message: "Excel file processed and data saved successfully.",
         receiptId: receipt._id,
+        receiptJson : receipt,
       });
 
       fs.unlinkSync(filePath);
@@ -338,6 +339,7 @@ const uploadfile = async (req, res) => {
     res.status(200).json({
       message: "File processed and data saved successfully.",
       receiptId: receipt._id,
+      receiptJson : receipt,
     });
 
     fs.unlinkSync(filePath);
