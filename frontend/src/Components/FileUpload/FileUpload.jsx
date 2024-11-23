@@ -1,12 +1,14 @@
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
+import { fetchAllData } from "../../Store/Slice"; // Import the fetchAllData action
 
 const FileUpload = () => {
   const [isLoading, setIsLoading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const dispatch = useDispatch(); // Initialize Redux dispatch
 
-  const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-
+  const handleFileUpload = async (file) => {
     if (!file) {
       toast.error("No file selected");
       return;
@@ -31,16 +33,57 @@ const FileUpload = () => {
       const data = await response.json();
       console.log(data.receiptJson);
       toast.success(data.message || "File uploaded successfully!");
+
+      // Re-fetch Redux data after successful upload
+      dispatch(fetchAllData());
     } catch (error) {
       console.error("Error processing the document:", error);
       toast.error(error.message || "An error occurred during file upload.");
     } finally {
       setIsLoading(false);
+      setIsDragging(false);
     }
   };
 
+  const handleDragOver = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    setIsDragging(false);
+
+    const file = event.dataTransfer.files[0];
+    if (file) {
+      handleFileUpload(file);
+    } else {
+      toast.error("No file detected in drop zone.");
+    }
+  };
+
+  const handleInputChange = (event) => {
+    const file = event.target.files[0];
+    handleFileUpload(file);
+  };
+
   return (
-    <div className="border-dashed border-2 border-gray-300 bg-white p-6 rounded-lg text-center">
+    <div
+      className={`border-dashed border-2 p-6 rounded-lg text-center transition ${
+        isDragging ? "border-indigo-500 bg-indigo-50" : "border-gray-300 bg-white"
+      }`}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <p className="mb-4 text-gray-600">
         Drag and drop a file here or click the button below to upload.
       </p>
@@ -48,7 +91,7 @@ const FileUpload = () => {
         type="file"
         id="file-upload"
         className="hidden"
-        onChange={handleFileUpload}
+        onChange={handleInputChange}
         accept=".pdf,.txt,.xlsx,.docx,image/jpeg,image/png,image/webp"
       />
       <label

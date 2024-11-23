@@ -31,7 +31,7 @@ const Home = () => {
   ];
 
   const getButtonClasses = (tab) =>
-    `px-4 py-2 rounded ${
+    `px-4 py-2 rounded shadow-md ${
       activeTab === tab
         ? "bg-indigo-500 text-white"
         : "text-gray-700 hover:bg-gray-100"
@@ -39,7 +39,7 @@ const Home = () => {
 
   return (
     <div className="p-6">
-      <div className="flex flex-wrap items-center justify-center shadow-xl gap-4 border-b pb-2 mb-6">
+      <div className="flex flex-wrap items-center justify-center shadow-md gap-4 border-b pb-2 mb-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -51,7 +51,7 @@ const Home = () => {
         ))}
       </div>
 
-      <div className="p-4 bg-blue-300 rounded shadow">
+      <div className="p-4  rounded shadow">
         {activeTab === "UploadReceipt" && <FileUpload />}
         {activeTab === "Invoices" && <Invoices />}
         {activeTab === "Products" && <Products />}
@@ -60,15 +60,6 @@ const Home = () => {
           <div className="text-gray-500">Please select a valid tab.</div>
         )}
       </div>
-
-      <div>
-      <h1>Invoices</h1>
-      <pre>{JSON.stringify(invoices, null, 2)}</pre>
-      <h1>Products</h1>
-      <pre>{JSON.stringify(products, null, 2)}</pre>
-      <h1>Customers</h1>
-      <pre>{JSON.stringify(customers, null, 2)}</pre>
-    </div>
     </div>
   );
 };

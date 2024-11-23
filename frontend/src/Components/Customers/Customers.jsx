@@ -29,7 +29,7 @@ const Customers = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-slate-300 shadow-md rounded-lg">
+    <div className="max-w-5xl mx-auto p-6 bg-slate-50 shadow-md rounded-lg">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Customers</h2>
       <table className="w-full border-collapse border border-gray-300">
         <thead className="bg-gray-100">
@@ -44,7 +44,7 @@ const Customers = () => {
         <tbody>
           {customers.map((record) =>
             record.customers.map((customer, index) => (
-              <tr key={`${record._id}-${index}`} className="hover:bg-gray-50">
+              <tr key={`${record._id}-${index}`} className="hover:bg-gray-100">
                 <td className="border border-gray-300 px-4 py-2">
                   {customer.customerName || "Unknown"}
                 </td>

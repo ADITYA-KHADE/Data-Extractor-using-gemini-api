@@ -29,7 +29,7 @@ const Products = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-white shadow-md rounded-lg">
+    <div className="max-w-5xl mx-auto p-6 bg-slate-50 shadow-md rounded-lg">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Products</h2>
       {products.map((record) => (
         <div key={record._id} className="mb-6">
@@ -50,7 +50,7 @@ const Products = () => {
             </thead>
             <tbody>
               {record.products.map((product, idx) => (
-                <tr key={idx} className="hover:bg-gray-50">
+                <tr key={idx} className="hover:bg-gray-100">
                   <td className="border border-gray-300 px-4 py-2">
                     {product.productname || "N/A"}
                   </td>

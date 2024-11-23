@@ -13,8 +13,9 @@ const getdata = async (req, res) => {
     const records = await Receipt.find();
 
     if (!records || records.length === 0) {
-      return res.status(404).json({
-        success: false,
+      return res.status(200).json({
+        success: true,
+        data:[],
         message: "No records found",
       });
     }
