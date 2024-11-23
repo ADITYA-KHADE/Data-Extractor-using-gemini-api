@@ -1,0 +1,63 @@
+{
+  "total": 1,
+  "data": [
+    {
+      "invoices": [
+        {
+          "serialNumber": "INV-148CZS",
+          "customerName": "Shounak",
+          "productNames": [
+            "GEMS CHOCLATE POUCH",
+            "TREAT BKS CASE 80PKT",
+            "NUTRI CHOICE BKS CASE",
+            "MILK BIKIS CLASSIC CASE 120PK"
+          ],
+          "totalquantity": 1095,
+          "totaltax": 3980.74,
+          "totalAmount": 205481,
+          "date": "12 Nov 2024"
+        }
+      ],
+      "products": [
+        {
+          "productname": "GEMS CHOCLATE POUCH",
+          "quantity": 1000,
+          "unitPrice": 4.7619,
+          "tax": 238.1,
+          "priceWithTax": 5000
+        },
+        {
+          "productname": "TREAT BKS CASE 80PKT",
+          "quantity": 50,
+          "unitPrice": 535.7143,
+          "tax": 3214.29,
+          "priceWithTax": 30000
+        },
+        {
+          "productname": "NUTRI CHOICE BKS CASE",
+          "quantity": 25,
+          "unitPrice": 666.6667,
+          "tax": 833.33,
+          "priceWithTax": 17500
+        },
+        {
+          "productname": "MILK BIKIS CLASSIC CASE 120PK",
+          "quantity": 20,
+          "unitPrice": 809.5238,
+          "tax": 809.52,
+          "priceWithTax": 17000
+        }
+      ],
+      "customers": [
+        {
+          "customerName": "Shounak",
+          "companyName": "NextSpeed Technologies Pvt Ltd",
+          "phoneNumber": "9999999994",
+          "totalAmount": 205481,
+          "email": "Swipe@gmail.com",
+          "address": "H/No 1 59/9, M.S.R.Y Nilayam, 4th floor,\nMasjid Banda, Kondapur, Rangareddy, H-\nyderabad\nBangalore South, KARNATAKA, 560030"
+        }
+      ]
+    }
+  ]
+}

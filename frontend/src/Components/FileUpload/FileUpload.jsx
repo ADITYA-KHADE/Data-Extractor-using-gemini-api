@@ -40,7 +40,7 @@ const FileUpload = () => {
   };
 
   return (
-    <div className="border-dashed border-2 border-gray-300 p-6 rounded-lg text-center">
+    <div className="border-dashed border-2 border-gray-300 bg-white p-6 rounded-lg text-center">
       <p className="mb-4 text-gray-600">
         Drag and drop a file here or click the button below to upload.
       </p>
@@ -49,7 +49,7 @@ const FileUpload = () => {
         id="file-upload"
         className="hidden"
         onChange={handleFileUpload}
-        accept=".pdf,.txt,.xlsx,.docx,.jpeg,.png"
+        accept=".pdf,.txt,.xlsx,.docx,image/jpeg,image/png,image/webp"
       />
       <label
         htmlFor="file-upload"

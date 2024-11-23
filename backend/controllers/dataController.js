@@ -8,44 +8,84 @@ const path = require("path");
 const genAI = new GoogleGenerativeAI(process.env.API_KEY);
 const fileManager = new GoogleAIFileManager(process.env.API_KEY);
 
-const getInvoices = async (req, res) => {
+const getdata = async (req, res) => {
   try {
-    const invoices = await Receipt.find({}, { invoices: 1, _id: 1 });
+    const records = await Receipt.find();
+
+    if (!records || records.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No records found",
+      });
+    }
+
+    const allData = records.map((record) => ({
+      _id: record._id,
+      invoices: record.invoices || [],
+      products: record.products || [],
+      customers: record.customers || [],
+    }));
+
     res.status(200).json({
       success: true,
-      data: invoices,
+      data: allData,
     });
   } catch (error) {
-    console.error("Error fetching invoices:", error.message);
+    console.error("Error fetching all data:", error.message);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching records",
+      error: error.message,
+    });
+  }
+};
+
+
+const updatedata = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const updatedData = req.body;
+
+    const record = await Receipt.findByIdAndUpdate(id, updatedData, {
+      new: true,
+    });
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Record not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Data updated successfully",
+      data: record,
+    });
+  } catch (error) {
+    console.error("Error updating data:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 };
 
-const getProducts = async (req, res) => {
+const deletedata = async (req, res) => {
   try {
-    const products = await Receipt.find({}, { products: 1, _id: 1 }); 
-    res.status(200).json({
-      success: true,
-      data: products,
-    });
+    const { id } = req.params;
+    const record = await Receipt.findByIdAndDelete(id);
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Record not found" });
+    }
+
+    res
+      .status(200)
+      .json({ success: true, message: "Data deleted successfully" });
   } catch (error) {
-    console.error("Error fetching products:", error.message);
+    console.error("Error deleting data:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 };
-
-const getCustomers = async (req, res) => {
-  try {
-    const customers = await Receipt.find({}, { customers: 1, _id: 1 });
-    res.status(200).json({
-      success: true,
-      data: customers, 
-    });
-  } catch (error) {
-    console.error("Error fetching customers:", error.message);
-    res.status(500).json({ success: false, error: error.message });
-  }
-}
 
 const uploadfile = async (req, res) => {
   try {
@@ -57,6 +97,7 @@ const uploadfile = async (req, res) => {
     const mimeType = req.file.mimetype;
     const displayName = req.file.originalname;
 
+    // Handle Excel files
     if (
       mimeType ===
         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" ||
@@ -90,69 +131,183 @@ const uploadfile = async (req, res) => {
             },
             {
               text: `
-              Extract the data from the document and structure it into three sections: 
-              
-              1. **Invoices**: 
-                 - For each invoice, extract the following fields:
-                   - Serial Number
-                   - Customer Name
-                   - Product Name
-                   - Quantity
-                   - Tax
-                   - Total Amount
-                   - Date
-                 - If extra information is available, include it as well.
-        
-              2. **Products**: 
-                 - For each product, extract the following fields:
-                   - Name
-                   - Quantity
-                   - Unit Price
-                   - Tax
-                   - Price with Tax
-                 - Optionally include the Discount field if available.
-        
-              3. **Customers**: 
-                 - For each customer, extract the following fields:
-                   - Customer Name
-                   - Phone Number
-                   - Total Purchase Amount
-                 - Optionally include any additional details such as email, address, etc.
-        
-              Ensure the data is well-structured and formatted as JSON with the appropriate fields for each table.
-        
-              Example structure:
-              {
-                "invoices": [
-                  {
-                    "serialNumber": "12345",
-                    "customerName": "John Doe",
-                    "productName": "Product 1, Product 2, ...",
-                    "quantity": 2(totalquantity),
-                    "tax": 5.00,
-                    "totalAmount": 50.00,
-                    "date": "2024-11-20"
-                  },
-                ],
-                "products": [
-                  {
-                    "name": "Product 1",
-                    "quantity": 10,
-                    "unitPrice": 20.00,
-                    "tax": 2.00,
-                    "priceWithTax": 22.00
-                  },
-                  ...
-                ],
-                "customers": [
-                  {
-                    "customerName": "John Doe",
-                    "phoneNumber": "123-456-7890",
-                    "totalPurchaseAmount": 100.00
-                  },
-                  ...
-                ]
-              }`,
+  Extract the data from the document and structure it into three sections: 
+  
+  1. **Invoices**: 
+     - For each invoice, extract the following fields:
+       - serialNumber (invoice number or unique identifier with each customerName)
+       - customerName
+       - productNames
+       - totalquantity (count of all products)
+       - totaltax
+       - totalAmount
+       - date
+     - If extra information is available, include it as well.
+
+  2. **Products**: 
+     - For each product, extract the following fields:
+       - productname
+       - quantity
+       - unitPrice
+       - tax
+       - priceWithTax
+     - Optionally include the Discount field if available.
+
+  3. **Customers**: 
+     - For each customer, extract the following fields: [there is only one customer in the invoice]
+       - customerName: (buyer name or consignee name or party name or customer name) 
+       - companyName: (company name or party company name or customer company name)
+       - phoneNumber: (buyer phone number or consignee phone number or party phone number or customer phone number)
+       - totalAmount: (total amount or total bill amount or total invoice amount)
+     - Optionally include any additional details such as email, address, etc.
+
+  Ensure the data is well-structured and formatted as JSON with the appropriate fields for each table.
+
+  If there are multiple customers in the invoice, then combine their products, invoices, and customer details and make an array of objects for each customer so that we can store multiple customers' data in the database.
+
+  If customerName or customerDetails are not available, then you can use "Unknown" as the default value.
+
+  Example 1 structure (Single Invoice and Customer):
+  {
+    "total": 1,
+    "data": [
+      {
+        "invoices": [
+          {
+            "serialNumber": "INV-87654",
+            "customerName": "Alex Johnson",
+            "productNames": ["Product 1", "Product 2", "Product 3"],
+            "totalquantity": 4,
+            "totaltax": 25.00,
+            "totalAmount": 400.00,
+            "date": "2024-11-15"
+          }
+        ],
+        "products": [
+          {
+            "productname": "Product 1",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 5.00,
+            "priceWithTax": 105.00
+          },
+          {
+            "productname": "Product 2",
+            "quantity": 2,
+            "unitPrice": 50.00,
+            "tax": 5.00,
+            "priceWithTax": 55.00
+          },
+          {
+            "productname": "Product 3",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 15.00,
+            "priceWithTax": 115.00
+          }
+        ],
+        "customers": [
+          {
+            "customerName": "Alex Johnson",
+            "companyName": "AutoWorks",
+            "phoneNumber": "555-4321",
+            "totalAmount": 400.00
+          }
+        ]
+      }
+    ]
+  }
+
+  Example 2 structure (Single Invoice and Multiple Customers):
+  {
+    "total": 2,
+    "data": [
+      {
+        "invoices": [
+          {
+            "serialNumber": "INV-87654",
+            "customerName": "Alex Johnson",
+            "productNames": ["Product 1", "Product 2", "Product 3"],
+            "totalquantity": 4,
+            "totaltax": 25.00,
+            "totalAmount": 400.00,
+            "date": "2024-11-15"
+          }
+        ],
+        "products": [
+          {
+            "productname": "Product 1",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 5.00,
+            "priceWithTax": 105.00
+          },
+          {
+            "productname": "Product 2",
+            "quantity": 2,
+            "unitPrice": 50.00,
+            "tax": 5.00,
+            "priceWithTax": 55.00
+          },
+          {
+            "productname": "Product 3",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 15.00,
+            "priceWithTax": 115.00
+          }
+        ],
+        "customers": [
+          {
+            "customerName": "Alex Johnson",
+            "companyName": "AutoWorks",
+            "phoneNumber": "555-4321",
+            "totalAmount": 400.00
+          }
+        ]
+      },
+      {
+        "invoices": [
+          {
+            "serialNumber": "INV-15236",
+            "customerName": "Sarah Lee",
+            "productNames": ["Product A", "Product B", "Product C"],
+            "totalquantity": 3,
+            "totaltax": 15.00,
+            "totalAmount": 300.00,
+            "date": "2024-11-18"
+          }
+        ],
+        "products": [
+          {
+            "productname": "Product A",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 5.00,
+            "priceWithTax": 105.00
+          },
+          {
+            "productname": "Product B",
+            "quantity": 2,
+            "unitPrice": 50.00,
+            "tax": 10.00,
+            "priceWithTax": 60.00
+          }
+        ],
+        "customers": [
+          {
+            "customerName": "Sarah Lee",
+            "companyName": "Tech Corp",
+            "phoneNumber": "555-1234",
+            "totalAmount": 300.00
+          }
+        ]
+      }
+    ]
+  }
+`
+
+,
             },
           ]),
         3,
@@ -160,46 +315,28 @@ const uploadfile = async (req, res) => {
       );
 
       const extractedText = result.response.candidates[0].content.parts[0].text;
-      console.log("Extracted Text:", extractedText);
       const jsonData = JSON.parse(extractedText.replace(/```json|```/g, ""));
       console.log("Extracted JSON Data:", jsonData);
 
-      const receipt = new Receipt({
-        invoices: Array.isArray(jsonData.invoices)
-          ? jsonData.invoices.map((invoice) => ({
-              serialNumber: invoice.serialNumber || "N/A",
-              customerName: invoice.customerName || "N/A",
-              productName: invoice.productName || "N/A",
-              quantity: invoice.quantity || 0,
-              tax: invoice.tax || 0,
-              totalAmount: invoice.totalAmount || 0,
-              date: invoice.date ? new Date(invoice.date) : new Date(),
-            }))
-          : [],
-        products: Array.isArray(jsonData.products)
-          ? jsonData.products.map((product) => ({
-              name: product.name || "N/A",
-              quantity: product.quantity || 0,
-              unitPrice: product.unitPrice || 0,
-              tax: product.tax || 0,
-              priceWithTax: product.priceWithTax || 0,
-            }))
-          : [],
-        customers: Array.isArray(jsonData.customers)
-          ? jsonData.customers.map((customer) => ({
-              customerName: customer.customerName || "N/A",
-              phoneNumber: customer.phoneNumber || "N/A",
-              totalPurchaseAmount: customer.totalPurchaseAmount || 0,
-            }))
-          : [],
-      });
-
-      await receipt.save();
+      if (jsonData.total > 1) {
+        for (const customerData of jsonData.data) {
+          const receipt = new Receipt({
+            invoices: customerData.invoices || [],
+            products: customerData.products || [],
+            customers: customerData.customers || [],
+          });
+          await receipt.save();
+        }
+      } else if (jsonData.total === 1) {
+        const fileDataPath = `${filePath}-data.json`;
+        fs.writeFileSync(fileDataPath, JSON.stringify(jsonData, null, 2));
+        console.log(`Data saved in file: ${fileDataPath}`);
+      }
 
       res.status(200).json({
         message: "Excel file processed and data saved successfully.",
-        receiptId: receipt._id,
-        receiptJson : receipt,
+        total: jsonData.total,
+        jsonData,
       });
 
       fs.unlinkSync(filePath);
@@ -207,6 +344,7 @@ const uploadfile = async (req, res) => {
       return;
     }
 
+    // Handle PDF/Image files
     const uploadResponse = await fileManager.uploadFile(filePath, {
       mimeType,
       displayName,
@@ -217,7 +355,6 @@ const uploadfile = async (req, res) => {
     );
 
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
     const result = await retryAsync(
       async () =>
         await model.generateContent([
@@ -229,69 +366,182 @@ const uploadfile = async (req, res) => {
           },
           {
             text: `
-            Extract the data from the document and structure it into three sections: 
-            
-            1. **Invoices**: 
-               - For each invoice, extract the following fields:
-                 - Serial Number
-                 - Customer Name
-                 - Product Name
-                 - Quantity
-                 - Tax
-                 - Total Amount
-                 - Date
-               - If extra information is available, include it as well.
-      
-            2. **Products**: 
-               - For each product, extract the following fields:
-                 - Name
-                 - Quantity
-                 - Unit Price
-                 - Tax
-                 - Price with Tax
-               - Optionally include the Discount field if available.
-      
-            3. **Customers**: 
-               - For each customer, extract the following fields:
-                 - Customer Name
-                 - Phone Number
-                 - Total Purchase Amount
-               - Optionally include any additional details such as email, address, etc.
-      
-            Ensure the data is well-structured and formatted as JSON with the appropriate fields for each table.
-      
-            Example structure:
-            {
-              "invoices": [
-                {
-                  "serialNumber": "12345",
-                  "customerName": "John Doe",
-                  "productName": "Product 1, Product 2, ...",
-                  "quantity": 2(totalquantity),
-                  "tax": 5.00,
-                  "totalAmount": 50.00,
-                  "date": "2024-11-20"
-                },
-              ],
-              "products": [
-                {
-                  "name": "Product 1",
-                  "quantity": 10,
-                  "unitPrice": 20.00,
-                  "tax": 2.00,
-                  "priceWithTax": 22.00
-                },
-                ...
-              ],
-              "customers": [
-                {
-                  "customerName": "John Doe",
-                  "phoneNumber": "123-456-7890",
-                  "totalPurchaseAmount": 100.00
-                },
-                ...
-              ]
-            }`,
+  Extract the data from the document and structure it into three sections: 
+  
+  1. **Invoices**: 
+     - For each invoice, extract the following fields:
+       - serialNumber 
+       - customerName
+       - productNames
+       - totalquantity
+       - totaltax
+       - totalAmount
+       - date
+     - If extra information is available, include it as well.
+
+  2. **Products**: 
+     - For each product, extract the following fields:
+       - productname
+       - quantity
+       - unitPrice
+       - tax
+       - priceWithTax
+     - Optionally include the Discount field if available.
+
+  3. **Customers**: 
+     - For each customer, extract the following fields: [there is only one customer in the invoice]
+       - customerName: (buyer name or consignee name or party name or customer name) 
+       - companyName: (company name or party company name or customer company name)
+       - phoneNumber: (buyer phone number or consignee phone number or party phone number or customer phone number)
+       - totalAmount: (total amount or total bill amount or total invoice amount)
+     - Optionally include any additional details such as email, address, etc.
+
+  Ensure the data is well-structured and formatted as JSON with the appropriate fields for each table.
+
+  If there are multiple customers in the invoice, then combine their products, invoices, and customer details and make an array of objects for each customer so that we can store multiple customers' data in the database.
+
+  If customerName or customerDetails are not available, then you can use "Unknown" as the default value.
+
+  Example 1 structure (Single Invoice and Customer):
+  {
+    "total": 1,
+    "data": [
+      {
+        "invoices": [
+          {
+            "serialNumber": "INV-87654",
+            "customerName": "Alex Johnson",
+            "productNames": ["Product 1", "Product 2", "Product 3"],
+            "totalquantity": 4,
+            "totaltax": 25.00,
+            "totalAmount": 400.00,
+            "date": "2024-11-15"
+          }
+        ],
+        "products": [
+          {
+            "productname": "Product 1",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 5.00,
+            "priceWithTax": 105.00
+          },
+          {
+            "productname": "Product 2",
+            "quantity": 2,
+            "unitPrice": 50.00,
+            "tax": 5.00,
+            "priceWithTax": 55.00
+          },
+          {
+            "productname": "Product 3",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 15.00,
+            "priceWithTax": 115.00
+          }
+        ],
+        "customers": [
+          {
+            "customerName": "Alex Johnson",
+            "companyName": "AutoWorks",
+            "phoneNumber": "555-4321",
+            "totalAmount": 400.00
+          }
+        ]
+      }
+    ]
+  }
+
+  Example 2 structure (Single Invoice and Multiple Customers):
+  {
+    "total": 2,
+    "data": [
+      {
+        "invoices": [
+          {
+            "serialNumber": "INV-87654",
+            "customerName": "Alex Johnson",
+            "productNames": ["Product 1", "Product 2", "Product 3"],
+            "totalquantity": 4,
+            "totaltax": 25.00,
+            "totalAmount": 400.00,
+            "date": "2024-11-15"
+          }
+        ],
+        "products": [
+          {
+            "productname": "Product 1",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 5.00,
+            "priceWithTax": 105.00
+          },
+          {
+            "productname": "Product 2",
+            "quantity": 2,
+            "unitPrice": 50.00,
+            "tax": 5.00,
+            "priceWithTax": 55.00
+          },
+          {
+            "productname": "Product 3",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 15.00,
+            "priceWithTax": 115.00
+          }
+        ],
+        "customers": [
+          {
+            "customerName": "Alex Johnson",
+            "companyName": "AutoWorks",
+            "phoneNumber": "555-4321",
+            "totalAmount": 400.00
+          }
+        ]
+      },
+      {
+        "invoices": [
+          {
+            "serialNumber": "INV-15236",
+            "customerName": "Sarah Lee",
+            "productNames": ["Product A", "Product B", "Product C"],
+            "totalquantity": 3,
+            "totaltax": 15.00,
+            "totalAmount": 300.00,
+            "date": "2024-11-18"
+          }
+        ],
+        "products": [
+          {
+            "productname": "Product A",
+            "quantity": 1,
+            "unitPrice": 100.00,
+            "tax": 5.00,
+            "priceWithTax": 105.00
+          },
+          {
+            "productname": "Product B",
+            "quantity": 2,
+            "unitPrice": 50.00,
+            "tax": 10.00,
+            "priceWithTax": 60.00
+          }
+        ],
+        "customers": [
+          {
+            "customerName": "Sarah Lee",
+            "companyName": "Tech Corp",
+            "phoneNumber": "555-1234",
+            "totalAmount": 300.00
+          }
+        ]
+      }
+    ]
+  }
+`
+,
           },
         ]),
       3,
@@ -299,47 +549,53 @@ const uploadfile = async (req, res) => {
     );
 
     const extractedText = result.response.candidates[0].content.parts[0].text;
-    console.log("Extracted Text:", extractedText);
-
     const jsonData = JSON.parse(extractedText.replace(/```json|```/g, ""));
     console.log("Extracted JSON Data:", jsonData);
 
-    const receipt = new Receipt({
-      invoices: Array.isArray(jsonData.invoices)
-        ? jsonData.invoices.map((invoice) => ({
-            serialNumber: invoice.serialNumber || "N/A",
-            customerName: invoice.customerName || "N/A",
-            productName: invoice.productName || "N/A",
-            quantity: invoice.quantity || 0,
-            tax: invoice.tax || 0,
-            totalAmount: invoice.totalAmount || 0,
-            date: invoice.date ? new Date(invoice.date) : new Date(),
-          }))
-        : [],
-      products: Array.isArray(jsonData.products)
-        ? jsonData.products.map((product) => ({
-            name: product.name || "N/A",
-            quantity: product.quantity || 0,
-            unitPrice: product.unitPrice || 0,
-            tax: product.tax || 0,
-            priceWithTax: product.priceWithTax || 0,
-          }))
-        : [],
-      customers: Array.isArray(jsonData.customers)
-        ? jsonData.customers.map((customer) => ({
-            customerName: customer.customerName || "N/A",
-            phoneNumber: customer.phoneNumber || "N/A",
-            totalPurchaseAmount: customer.totalPurchaseAmount || 0,
-          }))
-        : [],
-    });
-
-    await receipt.save();
+    if (jsonData.total > 1) {
+      // Loop through multiple customer data entries
+      for (const customerData of jsonData.data) {
+        try {
+          const receipt = new Receipt({
+            invoices: customerData.invoices || [],
+            products: customerData.products || [],
+            customers: customerData.customers || [],
+          });
+          await receipt.save(); // Save to MongoDB
+          console.log("Saved receipt data to MongoDB:", receipt);
+        } catch (error) {
+          console.error("Error saving receipt to MongoDB:", error.message,receipt);
+          res.status(500).json({
+            error: "Error saving receipt data to MongoDB",
+            gemini:jsonData,
+          });
+          return;
+        }
+      }
+    } else if (jsonData.total === 1) {
+      try {
+        const customerData = jsonData.data[0];
+        const receipt = new Receipt({
+          invoices: customerData.invoices || [],
+          products: customerData.products || [],
+          customers: customerData.customers || [],
+        });
+        await receipt.save(); // Save to MongoDB
+        console.log("Saved single receipt data to MongoDB:", receipt);
+      } catch (error) {
+        console.error("Error saving single receipt to MongoDB:", error.message);
+        res.status(500).json({
+          error: "Error saving single receipt data to MongoDB",
+        });
+        return;
+      }
+    }
+    
 
     res.status(200).json({
-      message: "File processed and data saved successfully.",
-      receiptId: receipt._id,
-      receiptJson : receipt,
+      message: "PDF/Image file processed and data saved successfully.",
+      total: jsonData.total,
+      jsonData,
     });
 
     fs.unlinkSync(filePath);
@@ -376,8 +632,8 @@ async function retryAsync(fn, retries, delay) {
 }
 
 module.exports = {
-  getInvoices,
-  getProducts,
-  getCustomers,
+  getdata,
+  updatedata,
+  deletedata,
   uploadfile,
 };

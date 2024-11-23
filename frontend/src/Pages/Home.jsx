@@ -1,17 +1,33 @@
-import React, { useState } from "react";
+import React, { useState,useEffect } from "react";
 import FileUpload from "../Components/FileUpload/FileUpload";
 import Invoices from "../Components/Invoices/Invoices";
 import Products from "../Components/Products/Products";
 import Customers from "../Components/Customers/Customers";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchAllData } from "../Store/Slice";
 
 const Home = () => {
-  const [activeTab, setActiveTab] = useState("UploadReceipt");
+  const [activeTab, setActiveTab] = useState("Invoices");
+
+  const dispatch = useDispatch();
+  const { invoices, products, customers, status, error } = useSelector(
+    (state) => state.data
+  );
+
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchAllData());
+    }
+  }, [status, dispatch]);
+
+  if (status === "loading") return <p>Loading...</p>;
+  if (status === "failed") return <p>Error: {error}</p>;
 
   const tabs = [
-    { id: "UploadReceipt", label: "Upload Receipt" },
     { id: "Invoices", label: "Invoices" },
     { id: "Products", label: "Products" },
     { id: "Customers", label: "Customers" },
+    { id: "UploadReceipt", label: "Upload Receipt" },
   ];
 
   const getButtonClasses = (tab) =>
@@ -23,7 +39,7 @@ const Home = () => {
 
   return (
     <div className="p-6">
-      <div className="flex flex-wrap gap-4 border-b pb-2 mb-6">
+      <div className="flex flex-wrap items-center justify-center shadow-xl gap-4 border-b pb-2 mb-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -35,7 +51,7 @@ const Home = () => {
         ))}
       </div>
 
-      <div className="p-4 bg-gray-50 rounded shadow">
+      <div className="p-4 bg-blue-300 rounded shadow">
         {activeTab === "UploadReceipt" && <FileUpload />}
         {activeTab === "Invoices" && <Invoices />}
         {activeTab === "Products" && <Products />}
@@ -44,6 +60,15 @@ const Home = () => {
           <div className="text-gray-500">Please select a valid tab.</div>
         )}
       </div>
+
+      <div>
+      <h1>Invoices</h1>
+      <pre>{JSON.stringify(invoices, null, 2)}</pre>
+      <h1>Products</h1>
+      <pre>{JSON.stringify(products, null, 2)}</pre>
+      <h1>Customers</h1>
+      <pre>{JSON.stringify(customers, null, 2)}</pre>
+    </div>
     </div>
   );
 };
