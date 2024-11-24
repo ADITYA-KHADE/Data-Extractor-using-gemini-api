@@ -43,64 +43,72 @@ const getdata = async (req, res) => {
 
 
 const updatedata = async (req, res) => {
+  const { invoices, products, customers } = req.body;
+  const { id } = req.params;
+
+  // console.log({ invoices, products, customers });
+
   try {
-    const { id } = req.params;
-    const updatedFields = req.body;
-
-    // Find the existing record
-    const existingRecord = await Receipt.findById(id);
-
-    if (!existingRecord) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Record not found" });
+    // Validate if all required fields are provided
+    if (!invoices || !products || !customers) {
+      return res.status(400).json({ msg: "Please enter all fields" });
     }
 
-    // Merge updated fields with existing data
-    const updatedRecord = {
-      ...existingRecord._doc, // Use `_doc` to access the raw document
-      ...updatedFields,
-      invoices: updatedFields.invoices || existingRecord.invoices,
-      products: updatedFields.products || existingRecord.products,
-      customers: updatedFields.customers || existingRecord.customers,
-    };
+    // Update the data in the database
+    const updateddata = await Receipt.findByIdAndUpdate(
+      id,
+      { invoices, products, customers },
+      { new: true, runValidators: true }
+    );
 
-    // Save the merged record back to the database
-    const result = await Receipt.findByIdAndUpdate(id, updatedRecord, {
-      new: true, // Return the updated document
-    });
+    // If data is not found
+    if (!updateddata) {
+      return res.status(404).json({ msg: "Data not found" });
+    }
 
+    // Respond with the updated data
     res.status(200).json({
-      success: true,
-      message: "Data updated successfully",
-      data: result,
+      updateddata,  // Return the updated data
+      msg: "Data updated successfully"
     });
   } catch (error) {
-    console.error("Error updating data:", error.message);
-    res.status(500).json({ success: false, error: error.message });
+    console.error(error.message);
+    res.status(500).json({ error: "Server error" });
   }
 };
+
 
 
 const deletedata = async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Attempt to delete the record
     const record = await Receipt.findByIdAndDelete(id);
 
+    // Handle case where the record doesn't exist
     if (!record) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Record not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Record not found",
+      });
     }
 
-    res
-      .status(200)
-      .json({ success: true, message: "Data deleted successfully" });
+    // Respond with success message
+    res.status(200).json({
+      success: true,
+      message: "Data deleted successfully",
+    });
   } catch (error) {
+    // Log the error and respond with an error message
     console.error("Error deleting data:", error.message);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({
+      success: false,
+      error: "An internal server error occurred. Please try again later.",
+    });
   }
 };
+
 
 const uploadfile = async (req, res) => {
   try {

@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { toast } from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import { fetchAllData } from "../../Store/Slice";
+import { fetchData } from "../../Store/Slice";
 
 const UpdateModal = ({ data, setUpdateModal }) => {
   const dispatch = useDispatch();
@@ -20,30 +20,38 @@ const UpdateModal = ({ data, setUpdateModal }) => {
   useEffect(() => {
     if (data) {
       setUpdatedProducts(data.products || []);
-      setInvoiceUpdates(data.invoices|| {});
-      setCustomerUpdates(data.customers || {});
+      setInvoiceUpdates(data.invoices?.[0] || {});
+      setCustomerUpdates(data.customers?.[0] || {});
     }
   }, [data]);
 
-  const handleProductChange = (index, field, value) => {
-    const updated = [...updatedProducts];
-    updated[index] = { ...updated[index], [field]: value };
-    setUpdatedProducts(updated);
+  const recalculatePriceWithTax = (product) => {
+    const quantity = parseInt(product.quantity || 0, 10);
+    const unitPrice = parseFloat(product.unitPrice || 0);
+    const tax = parseFloat(product.tax || 0);
+    const totalPrice = quantity * unitPrice + tax;
+    return totalPrice.toFixed(2); // Ensure 2 decimal places
+  };
 
-    // Update invoice and customer fields dynamically
-    const productNames = updated.map((p) => p.productname);
-    const totalQuantity = updated.reduce((acc, p) => acc + (p.quantity || 0), 0);
-    const totalTax = updated.reduce((acc, p) => acc + (p.tax || 0), 0);
-    const totalAmount = updated.reduce(
-      (acc, p) => acc + (p.priceWithTax || 0),
+  const recalculateFields = (updated) => {
+    const productNames = updated.map((p) => p.productname || "Unnamed Product");
+    const totalQuantity = updated.reduce(
+      (acc, p) => acc + (parseInt(p.quantity, 10) || 0),
       0
     );
+    const totalTax = updated.reduce(
+      (acc, p) => acc + (parseFloat(p.tax) || 0),
+      0
+    );
+    const totalAmount = updated
+      .reduce((acc, p) => acc + (parseFloat(p.priceWithTax) || 0), 0)
+      .toFixed(2); // Round to 2 decimal places
 
     setInvoiceUpdates((prev) => ({
       ...prev,
       productNames,
       totalquantity: totalQuantity,
-      totaltax: totalTax,
+      totaltax: totalTax.toFixed(2), // Ensure 2 decimal places for tax
       totalAmount,
     }));
 
@@ -53,35 +61,50 @@ const UpdateModal = ({ data, setUpdateModal }) => {
     }));
   };
 
-  const handleUpdate = () => {
+  const handleProductChange = (index, field, value) => {
+    const updated = [...updatedProducts];
+    const product = { ...updated[index], [field]: value };
+
+    if (["quantity", "unitPrice", "tax"].includes(field)) {
+      product.priceWithTax = recalculatePriceWithTax(product);
+    }
+
+    updated[index] = product;
+    setUpdatedProducts(updated);
+    recalculateFields(updated);
+  };
+
+  const handleUpdate = async () => {
     const payload = {
-      products: updatedProducts,
       invoices: [invoiceUpdates],
+      products: updatedProducts,
       customers: [customerUpdates],
     };
 
-    fetch(`/api/data/updatedata/${data._id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to update data.");
-        }
-        return res.json();
-      })
-      .then((response) => {
-        toast.success(response.message || "Data updated successfully!");
-        dispatch(fetchAllData()); // Refresh Redux state
-        setUpdateModal(false); // Close modal
-      })
-      .catch((err) => {
-        toast.error("Error updating data.");
-        console.error(err);
+    console.log("Payload being sent:", payload);
+
+    try {
+      const res = await fetch(`/api/data/updatedata/${data._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
       });
+
+      if (!res.ok) {
+        const errorResponse = await res.json();
+        throw new Error(errorResponse.message || "Failed to update data.");
+      }
+
+      const response = await res.json();
+      toast.success(response.message || "Data updated successfully!");
+      dispatch(fetchData());
+      setUpdateModal(false);
+    } catch (err) {
+      toast.error(err.message || "Error updating data.");
+      console.error(err);
+    }
   };
 
   return (
@@ -95,7 +118,6 @@ const UpdateModal = ({ data, setUpdateModal }) => {
             </h3>
             <TextField
               label="Product Name"
-              name="productname"
               value={product.productname || ""}
               onChange={(e) => handleProductChange(index, "productname", e.target.value)}
               fullWidth
@@ -103,33 +125,32 @@ const UpdateModal = ({ data, setUpdateModal }) => {
             />
             <TextField
               label="Quantity"
-              name="quantity"
               value={product.quantity || ""}
               onChange={(e) => handleProductChange(index, "quantity", e.target.value)}
               fullWidth
               margin="normal"
+              type="number"
             />
             <TextField
               label="Unit Price"
-              name="unitPrice"
               value={product.unitPrice || ""}
               onChange={(e) => handleProductChange(index, "unitPrice", e.target.value)}
               fullWidth
               margin="normal"
+              type="number"
             />
             <TextField
               label="Tax"
-              name="tax"
               value={product.tax || ""}
               onChange={(e) => handleProductChange(index, "tax", e.target.value)}
               fullWidth
               margin="normal"
+              type="number"
             />
             <TextField
               label="Price with Tax"
-              name="priceWithTax"
               value={product.priceWithTax || ""}
-              onChange={(e) => handleProductChange(index, "priceWithTax", e.target.value)}
+              disabled
               fullWidth
               margin="normal"
             />

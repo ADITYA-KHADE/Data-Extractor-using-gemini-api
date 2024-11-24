@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { toast } from "react-hot-toast";
-import { fetchAllData } from "../../Store/Slice"; // Import the fetchAllData action
+import { fetchData } from "../../Store/Slice"; // Import the correct thunk
 
 const FileUpload = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const dispatch = useDispatch(); // Initialize Redux dispatch
+  const dispatch = useDispatch();
 
   const handleFileUpload = async (file) => {
     if (!file) {
@@ -31,11 +31,10 @@ const FileUpload = () => {
       }
 
       const data = await response.json();
-      console.log(data.receiptJson);
       toast.success(data.message || "File uploaded successfully!");
 
       // Re-fetch Redux data after successful upload
-      dispatch(fetchAllData());
+      dispatch(fetchData());
     } catch (error) {
       console.error("Error processing the document:", error);
       toast.error(error.message || "An error occurred during file upload.");

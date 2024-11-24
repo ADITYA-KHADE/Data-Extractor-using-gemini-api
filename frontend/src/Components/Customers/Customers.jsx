@@ -1,23 +1,28 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Pagination } from "@mui/material";
-import { fetchAllData } from "../../Store/Slice";
+import { fetchData } from "../../Store/Slice";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import UpdateCustomerModal from "./UpdateCustomerModal";
+import DeleteModal from "./DeleteModal";
 
 const Customers = () => {
   const dispatch = useDispatch();
 
-  // Extract Redux state for customers
-  const { customers, status, error } = useSelector((state) => state.data);
+  // Redux state for customers and related data
+  const { data, status, error } = useSelector((state) => state.data);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
+  const [updateModal, setUpdateModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState(null); // Store full record, not just customer
+
   useEffect(() => {
     if (status === "idle") {
-      dispatch(fetchAllData());
+      dispatch(fetchData());
     }
   }, [dispatch, status]);
 
@@ -25,15 +30,32 @@ const Customers = () => {
     setCurrentPage(value);
   };
 
-  // Flatten customers data and paginate
-  const allCustomers = customers.flatMap((record) => record.customers);
+  // Flatten customers from all records
+  const allCustomers = data.flatMap((record) =>
+    record.customers.map((customer) => ({
+      ...customer,
+      record, // Include the full record for reference
+    }))
+  );
+
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCustomers = allCustomers.slice(
     startIndex,
     startIndex + itemsPerPage
   );
 
-  // Handle loading, error, and no customers state
+  const handleEditCustomer = (customer) => {
+    // Pass the entire record to the modal
+    setSelectedRecord(customer.record);
+    setUpdateModal(true);
+  };
+
+  const handleDeleteCustomer = (customer) => {
+    // Pass the entire record to the modal
+    setSelectedRecord(customer.record);
+    setDeleteModal(true);
+  };
+
   if (status === "loading") {
     return <p className="text-gray-500">Loading customers...</p>;
   }
@@ -80,12 +102,18 @@ const Customers = () => {
                 {customer.address || "N/A"}
               </td>
               <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+                <button
+                  className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
+                  onClick={() => handleEditCustomer(customer)}
+                >
                   <EditIcon />
                 </button>
               </td>
               <td className="border border-gray-300 px-4 py-2 text-center">
-                <button className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600">
+                <button
+                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600"
+                  onClick={() => handleDeleteCustomer(customer)}
+                >
                   <DeleteIcon />
                 </button>
               </td>
@@ -101,6 +129,20 @@ const Customers = () => {
           color="primary"
         />
       </div>
+
+      {updateModal && (
+        <UpdateCustomerModal
+          data={selectedRecord}
+          setUpdateModal={setUpdateModal}
+        />
+      )}
+
+      {deleteModal && (
+        <DeleteModal
+          data={selectedRecord}
+          setDeleteModal={setDeleteModal}
+        />
+      )}
     </div>
   );
 };

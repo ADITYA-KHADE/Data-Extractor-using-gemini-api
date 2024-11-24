@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Pagination } from "@mui/material";
-import { fetchAllData } from "../../Store/Slice";
-
+import { fetchData } from "../../Store/Slice"; // Corrected import
 
 const Invoices = () => {
   const dispatch = useDispatch();
-  const { invoices, status, error } = useSelector((state) => state.data);
+  const { data: invoices, status, error } = useSelector((state) => state.data);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -14,7 +13,7 @@ const Invoices = () => {
 
   useEffect(() => {
     if (status === "idle") {
-      dispatch(fetchAllData());
+      dispatch(fetchData());
     }
   }, [dispatch, status]);
 
@@ -23,11 +22,10 @@ const Invoices = () => {
   };
 
   // Calculate paginated data
+  const allInvoices = invoices.flatMap((item) => item.invoices || []);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedInvoices = invoices
-    .flatMap((item) => item.invoices)
-    .slice(startIndex, endIndex);
+  const paginatedInvoices = allInvoices.slice(startIndex, endIndex);
 
   // Loading, error, and empty state handling
   if (status === "loading") {
@@ -38,7 +36,7 @@ const Invoices = () => {
     return <p className="text-red-500">{error}</p>;
   }
 
-  if (!invoices.length) {
+  if (!allInvoices.length) {
     return <p className="text-gray-500">No invoices found.</p>;
   }
 
@@ -55,17 +53,16 @@ const Invoices = () => {
             <th className="border border-gray-300 px-4 py-2">Tax</th>
             <th className="border border-gray-300 px-4 py-2">Total Amount</th>
             <th className="border border-gray-300 px-4 py-2">Date</th>
-            
           </tr>
         </thead>
         <tbody>
           {paginatedInvoices.map((invoice, index) => (
             <tr key={index} className="hover:bg-gray-100">
               <td className="border border-gray-300 px-4 py-2">
-                {invoice.serialNumber}
+                {invoice.serialNumber || "N/A"}
               </td>
               <td className="border border-gray-300 px-4 py-2">
-                {invoice.customerName}
+                {invoice.customerName || "N/A"}
               </td>
               <td className="border border-gray-300 px-4 py-2">
                 {invoice.productNames?.join(", ") || "N/A"}
@@ -84,16 +81,13 @@ const Invoices = () => {
                   ? new Date(invoice.date).toLocaleDateString()
                   : "N/A"}
               </td>
-              
             </tr>
           ))}
         </tbody>
       </table>
       <div className="mt-4 flex justify-center">
         <Pagination
-          count={Math.ceil(
-            invoices.flatMap((item) => item.invoices).length / itemsPerPage
-          )}
+          count={Math.ceil(allInvoices.length / itemsPerPage)}
           page={currentPage}
           onChange={handlePageChange}
           color="primary"

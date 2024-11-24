@@ -1,32 +1,44 @@
 import React from "react";
+import { useDispatch } from "react-redux";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
 import { toast } from "react-hot-toast";
+import { fetchData } from "../../Store/Slice"; // Import the fetchData action
 
-const DeleteModal = ({ data, setDeleteModal, setReload }) => {
-  const handleDelete = () => {
-    fetch(`/api/data/delete/${data._id}`, { // Use 'data' instead of 'Data'
-      method: "DELETE",
-    })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error("Failed to delete data.");
-        }
-        return res.json();
-      })
-      .then(() => {
-        toast.success("Data deleted successfully!");
-        setReload((prev) => !prev); // Trigger re-fetch if needed
-        setDeleteModal(false); // Close the modal after successful deletion
-      })
-      .catch((err) => {
-        toast.error("Error deleting data.");
-        console.error("Error deleting data:", err);
+const DeleteModal = ({ data, setDeleteModal }) => {
+  const dispatch = useDispatch();
+
+  const handleDelete = async () => {
+    try {
+      // Perform DELETE request
+      const res = await fetch(`/api/data/deletedata/${data._id}`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
       });
+
+      if (!res.ok) {
+        const errorResponse = await res.json();
+        throw new Error(errorResponse.message || "Failed to delete product.");
+      }
+
+      const response = await res.json();
+      toast.success(response.message || "Product deleted successfully!");
+
+      // Dispatch fetchData to refresh the Redux state
+      dispatch(fetchData());
+
+      // Close the modal after successful deletion
+      setDeleteModal(false);
+    } catch (err) {
+      toast.error(err.message || "Error deleting product.");
+      console.error("Error deleting product:", err);
+    }
   };
 
   return (
     <Dialog open={true} onClose={() => setDeleteModal(false)} fullWidth maxWidth="xs">
-      <DialogTitle>Delete Product</DialogTitle> {/* Change title if needed */}
+      <DialogTitle>Delete Product</DialogTitle>
       <DialogContent>
         Are you sure you want to delete this product? This action cannot be undone.
       </DialogContent>

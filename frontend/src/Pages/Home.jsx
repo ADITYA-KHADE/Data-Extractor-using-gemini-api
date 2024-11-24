@@ -1,27 +1,25 @@
-import React, { useState,useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import FileUpload from "../Components/FileUpload/FileUpload";
 import Invoices from "../Components/Invoices/Invoices";
 import Products from "../Components/Products/Products";
 import Customers from "../Components/Customers/Customers";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchAllData } from "../Store/Slice";
+import { fetchData } from "../Store/Slice";
 import Loading from "../Components/Loading/Loading";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Invoices");
 
   const dispatch = useDispatch();
-  const { invoices, products, customers, status, error } = useSelector(
-    (state) => state.data
-  );
+  const { data, status, error } = useSelector((state) => state.data);
 
   useEffect(() => {
     if (status === "idle") {
-      dispatch(fetchAllData());
+      dispatch(fetchData());
     }
   }, [status, dispatch]);
 
-  if (status === "loading") return <Loading/>;
+  if (status === "loading") return <Loading />;
   if (status === "failed") return <p>Error: {error}</p>;
 
   const tabs = [
@@ -52,11 +50,11 @@ const Home = () => {
         ))}
       </div>
 
-      <div className="p-4  rounded shadow">
+      <div className="p-4 rounded shadow">
         {activeTab === "UploadReceipt" && <FileUpload />}
-        {activeTab === "Invoices" && <Invoices />}
-        {activeTab === "Products" && <Products />}
-        {activeTab === "Customers" && <Customers />}
+        {activeTab === "Invoices" && <Invoices invoices={data} />}
+        {activeTab === "Products" && <Products products={data} />}
+        {activeTab === "Customers" && <Customers customers={data} />}
         {!tabs.some((tab) => tab.id === activeTab) && (
           <div className="text-gray-500">Please select a valid tab.</div>
         )}

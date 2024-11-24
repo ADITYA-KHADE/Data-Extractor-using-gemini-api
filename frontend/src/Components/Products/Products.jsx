@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Pagination } from "@mui/material";
-import { fetchAllData } from "../../Store/Slice";
+import { fetchData } from "../../Store/Slice"; // Correct path for your slice
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UpdateModal from "./UpdateModal";
@@ -11,26 +11,18 @@ const Products = () => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [updateModal, setUpdateModal] = useState(false);
-  const [Data, setData] = useState({});
+  const [data, setData] = useState({}); // Updated for naming consistency
 
-  const handleUpdate = (data) => {
-    setData(data);
-    setUpdateModal(true);
-  };
-
-  const handleDelete = (contact) => {
-    setData(contact);
-    setDeleteModal(true);
-  };
-
-  const { products, status, error } = useSelector((state) => state.data);
+  // Extract Redux state
+  const { data: apiData, status, error } = useSelector((state) => state.data);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 2;
 
+  // Fetch data on initial render if idle
   useEffect(() => {
     if (status === "idle") {
-      dispatch(fetchAllData());
+      dispatch(fetchData()); // Correct the action name to fetchData
     }
   }, [dispatch, status]);
 
@@ -38,12 +30,30 @@ const Products = () => {
     setCurrentPage(value);
   };
 
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProducts = products.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
+  // Handle update logic
+  const handleUpdate = (record) => {
+    const relatedInvoices = record.invoices; // Use the invoices from the record
+    const relatedCustomers = record.customers; // Use the customers from the record
 
+    setData({
+      ...record,
+      invoices: relatedInvoices,
+      customers: relatedCustomers,
+    });
+    setUpdateModal(true);
+  };
+
+  // Handle delete logic
+  const handleDelete = (record) => {
+    setData(record);
+    setDeleteModal(true);
+  };
+
+  // Paginate products (now fetching from apiData)
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = apiData.slice(startIndex, startIndex + itemsPerPage);
+
+  // Handle loading, error, and empty states
   if (status === "loading") {
     return <p className="text-gray-500">Loading products...</p>;
   }
@@ -52,20 +62,20 @@ const Products = () => {
     return <p className="text-red-500">{error}</p>;
   }
 
-  if (!products.length) {
+  if (!apiData.length) {
     return <p className="text-gray-500">No products found.</p>;
   }
 
   return (
     <div className="max-w-7xl mx-auto p-6 bg-slate-50 shadow-md rounded-lg">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Products</h2>
-      {paginatedProducts.map((record) => (
+      {paginatedData.map((record) => (
         <div key={record._id} className="mb-6">
-          <div className="justify-between flex">
+          <div className="flex justify-between">
             <h3 className="text-xl font-semibold text-gray-700">
               Record ID: {record._id}
             </h3>
-            <div className="flex justify-end space-x-4">
+            <div className="flex space-x-4">
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
                 onClick={() => handleUpdate(record)}
@@ -120,7 +130,7 @@ const Products = () => {
 
       <div className="mt-4 flex justify-center">
         <Pagination
-          count={Math.ceil(products.length / itemsPerPage)}
+          count={Math.ceil(apiData.length / itemsPerPage)}
           page={currentPage}
           onChange={handlePageChange}
           color="primary"
@@ -128,10 +138,10 @@ const Products = () => {
       </div>
 
       {updateModal && (
-        <UpdateModal data={Data} setUpdateModal={setUpdateModal} />
+        <UpdateModal data={data} setUpdateModal={setUpdateModal} />
       )}
       {deleteModal && (
-        <DeleteModal data={Data} setDeleteModal={setDeleteModal} />
+        <DeleteModal data={data} setDeleteModal={setDeleteModal} />
       )}
     </div>
   );
