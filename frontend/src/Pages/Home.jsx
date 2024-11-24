@@ -5,6 +5,7 @@ import Products from "../Components/Products/Products";
 import Customers from "../Components/Customers/Customers";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchAllData } from "../Store/Slice";
+import Loading from "../Components/Loading/Loading";
 
 const Home = () => {
   const [activeTab, setActiveTab] = useState("Invoices");
@@ -20,7 +21,7 @@ const Home = () => {
     }
   }, [status, dispatch]);
 
-  if (status === "loading") return <p>Loading...</p>;
+  if (status === "loading") return <Loading/>;
   if (status === "failed") return <p>Error: {error}</p>;
 
   const tabs = [

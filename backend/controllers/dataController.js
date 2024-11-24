@@ -45,28 +45,42 @@ const getdata = async (req, res) => {
 const updatedata = async (req, res) => {
   try {
     const { id } = req.params;
-    const updatedData = req.body;
+    const updatedFields = req.body;
 
-    const record = await Receipt.findByIdAndUpdate(id, updatedData, {
-      new: true,
-    });
+    // Find the existing record
+    const existingRecord = await Receipt.findById(id);
 
-    if (!record) {
+    if (!existingRecord) {
       return res
         .status(404)
         .json({ success: false, message: "Record not found" });
     }
 
+    // Merge updated fields with existing data
+    const updatedRecord = {
+      ...existingRecord._doc, // Use `_doc` to access the raw document
+      ...updatedFields,
+      invoices: updatedFields.invoices || existingRecord.invoices,
+      products: updatedFields.products || existingRecord.products,
+      customers: updatedFields.customers || existingRecord.customers,
+    };
+
+    // Save the merged record back to the database
+    const result = await Receipt.findByIdAndUpdate(id, updatedRecord, {
+      new: true, // Return the updated document
+    });
+
     res.status(200).json({
       success: true,
       message: "Data updated successfully",
-      data: record,
+      data: result,
     });
   } catch (error) {
     console.error("Error updating data:", error.message);
     res.status(500).json({ success: false, error: error.message });
   }
 };
+
 
 const deletedata = async (req, res) => {
   try {

@@ -1,21 +1,49 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchAllData } from "../../Store/Slice"; // Adjust the path as needed
+import { Pagination } from "@mui/material";
+import { fetchAllData } from "../../Store/Slice";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import UpdateModal from "./UpdateModal";
+import DeleteModal from "./DeleteModal";
 
 const Products = () => {
   const dispatch = useDispatch();
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [updateModal, setUpdateModal] = useState(false);
+  const [Data, setData] = useState({});
 
-  // Extract the Redux state
+  const handleUpdate = (data) => {
+    setData(data);
+    setUpdateModal(true);
+  };
+
+  const handleDelete = (contact) => {
+    setData(contact);
+    setDeleteModal(true);
+  };
+
   const { products, status, error } = useSelector((state) => state.data);
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 2;
+
   useEffect(() => {
-    // Fetch all data on component mount if not already fetched
     if (status === "idle") {
       dispatch(fetchAllData());
     }
   }, [dispatch, status]);
 
-  // Handle loading, error, and no products state
+  const handlePageChange = (event, value) => {
+    setCurrentPage(value);
+  };
+
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = products.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
   if (status === "loading") {
     return <p className="text-gray-500">Loading products...</p>;
   }
@@ -29,13 +57,30 @@ const Products = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6 bg-slate-50 shadow-md rounded-lg">
+    <div className="max-w-7xl mx-auto p-6 bg-slate-50 shadow-md rounded-lg">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Products</h2>
-      {products.map((record) => (
+      {paginatedProducts.map((record) => (
         <div key={record._id} className="mb-6">
-          <h3 className="text-xl font-semibold text-gray-700">
-            Record ID: {record._id}
-          </h3>
+          <div className="justify-between flex">
+            <h3 className="text-xl font-semibold text-gray-700">
+              Record ID: {record._id}
+            </h3>
+            <div className="flex justify-end space-x-4">
+              <button
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                onClick={() => handleUpdate(record)}
+              >
+                <EditIcon /> Edit
+              </button>
+              <button
+                className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                onClick={() => handleDelete(record)}
+              >
+                <DeleteIcon /> Delete
+              </button>
+            </div>
+          </div>
+
           <table className="w-full border-collapse border border-gray-300 mt-4">
             <thead className="bg-gray-100">
               <tr>
@@ -72,6 +117,22 @@ const Products = () => {
           </table>
         </div>
       ))}
+
+      <div className="mt-4 flex justify-center">
+        <Pagination
+          count={Math.ceil(products.length / itemsPerPage)}
+          page={currentPage}
+          onChange={handlePageChange}
+          color="primary"
+        />
+      </div>
+
+      {updateModal && (
+        <UpdateModal data={Data} setUpdateModal={setUpdateModal} />
+      )}
+      {deleteModal && (
+        <DeleteModal data={Data} setDeleteModal={setDeleteModal} />
+      )}
     </div>
   );
 };
