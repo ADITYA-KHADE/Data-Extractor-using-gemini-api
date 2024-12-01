@@ -34,7 +34,6 @@ const FileUpload = () => {
       const data = await response.json();
       toast.success(data.message || "File uploaded successfully!");
 
-      // Re-fetch Redux data after successful upload
       dispatch(fetchData());
     } catch (error) {
       console.error("Error processing the document:", error);

@@ -12,6 +12,7 @@ import { useDispatch } from "react-redux";
 import { fetchData } from "../../Store/Slice";
 
 const UpdateModal = ({ data, setUpdateModal }) => {
+  console.log(data);
   const dispatch = useDispatch();
   const [updatedProducts, setUpdatedProducts] = useState([]);
   const [invoiceUpdates, setInvoiceUpdates] = useState({});
@@ -30,7 +31,7 @@ const UpdateModal = ({ data, setUpdateModal }) => {
     const unitPrice = parseFloat(product.unitPrice || 0);
     const tax = parseFloat(product.tax || 0);
     const totalPrice = quantity * unitPrice + tax;
-    return totalPrice.toFixed(2); // Ensure 2 decimal places
+    return totalPrice.toFixed(2); 
   };
 
   const recalculateFields = (updated) => {
@@ -45,8 +46,7 @@ const UpdateModal = ({ data, setUpdateModal }) => {
     );
     const totalAmount = updated
       .reduce((acc, p) => acc + (parseFloat(p.priceWithTax) || 0), 0)
-      .toFixed(2); // Round to 2 decimal places
-
+      .toFixed(2); 
     setInvoiceUpdates((prev) => ({
       ...prev,
       productNames,

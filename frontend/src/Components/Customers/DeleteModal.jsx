@@ -2,14 +2,14 @@ import React from "react";
 import { useDispatch } from "react-redux";
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button } from "@mui/material";
 import { toast } from "react-hot-toast";
-import { fetchData } from "../../Store/Slice"; // Import the fetchData action
+import { fetchData } from "../../Store/Slice"; 
 
 const DeleteModal = ({ data, setDeleteModal }) => {
   const dispatch = useDispatch();
 
   const handleDelete = async () => {
     try {
-      // Perform DELETE request
+   
       const res = await fetch(`/api/data/deletedata/${data._id}`, {
         method: "DELETE",
         headers: {
@@ -25,10 +25,10 @@ const DeleteModal = ({ data, setDeleteModal }) => {
       const response = await res.json();
       toast.success(response.message || "Product deleted successfully!");
 
-      // Dispatch fetchData to refresh the Redux state
+
       dispatch(fetchData());
 
-      // Close the modal after successful deletion
+
       setDeleteModal(false);
     } catch (err) {
       toast.error(err.message || "Error deleting product.");

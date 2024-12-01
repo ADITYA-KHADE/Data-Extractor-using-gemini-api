@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Pagination } from "@mui/material";
-import { fetchData } from "../../Store/Slice"; // Correct path for your slice
+import { fetchData } from "../../Store/Slice"; 
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import UpdateModal from "./UpdateModal";
@@ -11,18 +11,16 @@ const Products = () => {
   const dispatch = useDispatch();
   const [deleteModal, setDeleteModal] = useState(false);
   const [updateModal, setUpdateModal] = useState(false);
-  const [data, setData] = useState({}); // Updated for naming consistency
+  const [data, setData] = useState({}); 
 
-  // Extract Redux state
   const { data: apiData, status, error } = useSelector((state) => state.data);
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 2;
 
-  // Fetch data on initial render if idle
   useEffect(() => {
     if (status === "idle") {
-      dispatch(fetchData()); // Correct the action name to fetchData
+      dispatch(fetchData()); 
     }
   }, [dispatch, status]);
 
@@ -30,30 +28,20 @@ const Products = () => {
     setCurrentPage(value);
   };
 
-  // Handle update logic
-  const handleUpdate = (record) => {
-    const relatedInvoices = record.invoices; // Use the invoices from the record
-    const relatedCustomers = record.customers; // Use the customers from the record
 
-    setData({
-      ...record,
-      invoices: relatedInvoices,
-      customers: relatedCustomers,
-    });
+  const handleUpdate = (record) => {
+    setData(record);
     setUpdateModal(true);
   };
 
-  // Handle delete logic
   const handleDelete = (record) => {
     setData(record);
     setDeleteModal(true);
   };
 
-  // Paginate products (now fetching from apiData)
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedData = apiData.slice(startIndex, startIndex + itemsPerPage);
 
-  // Handle loading, error, and empty states
   if (status === "loading") {
     return <p className="text-gray-500">Loading products...</p>;
   }

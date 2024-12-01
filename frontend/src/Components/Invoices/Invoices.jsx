@@ -7,7 +7,6 @@ const Invoices = () => {
   const dispatch = useDispatch();
   const { data: invoices, status, error } = useSelector((state) => state.data);
 
-  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 6;
 
@@ -21,13 +20,11 @@ const Invoices = () => {
     setCurrentPage(value);
   };
 
-  // Calculate paginated data
   const allInvoices = invoices.flatMap((item) => item.invoices || []);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedInvoices = allInvoices.slice(startIndex, endIndex);
 
-  // Loading, error, and empty state handling
   if (status === "loading") {
     return <p className="text-gray-500">Loading...</p>;
   }

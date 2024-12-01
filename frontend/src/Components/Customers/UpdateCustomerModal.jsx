@@ -18,25 +18,21 @@ const UpdateCustomerModal = ({ data, setUpdateModal }) => {
 
   useEffect(() => {
     if (data) {
-      // Load customer and associated invoices
       setCustomerUpdates(data.customers?.[0] || {});
       setUpdatedInvoices(data.invoices || []);
     }
   }, [data]);
 
-  // Handle change in customer fields
   const handleCustomerChange = (e) => {
     const { name, value } = e.target;
     const updatedCustomer = { ...customerUpdates, [name]: value };
     setCustomerUpdates(updatedCustomer);
 
-    // Update invoices to reflect the new customer name
     if (name === "customerName") {
       syncCustomerNameInInvoices(value);
     }
   };
 
-  // Update all invoices with the new customer name
   const syncCustomerNameInInvoices = (newCustomerName) => {
     const syncedInvoices = updatedInvoices.map((invoice) => ({
       ...invoice,
@@ -45,12 +41,11 @@ const UpdateCustomerModal = ({ data, setUpdateModal }) => {
     setUpdatedInvoices(syncedInvoices);
   };
 
-  // Handle update submission
   const handleUpdate = async () => {
     const payload = {
-      invoices: updatedInvoices, // Send updated invoices with synced customer name
-      products: data.products,   // Unchanged products
-      customers: [customerUpdates], // Updated customer
+      invoices: updatedInvoices,
+      products: data.products,
+      customers: [customerUpdates], 
     };
 
     try {

@@ -5,6 +5,7 @@ import { toast } from "react-hot-toast";
 import { fetchData } from "../../Store/Slice"; // Import the fetchData action
 
 const DeleteModal = ({ data, setDeleteModal }) => {
+  console.log(data);
   const dispatch = useDispatch();
 
   const handleDelete = async () => {
@@ -25,10 +26,8 @@ const DeleteModal = ({ data, setDeleteModal }) => {
       const response = await res.json();
       toast.success(response.message || "Product deleted successfully!");
 
-      // Dispatch fetchData to refresh the Redux state
       dispatch(fetchData());
 
-      // Close the modal after successful deletion
       setDeleteModal(false);
     } catch (err) {
       toast.error(err.message || "Error deleting product.");

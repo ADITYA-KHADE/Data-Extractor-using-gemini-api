@@ -10,7 +10,6 @@ import DeleteModal from "./DeleteModal";
 const Customers = () => {
   const dispatch = useDispatch();
 
-  // Redux state for customers and related data
   const { data, status, error } = useSelector((state) => state.data);
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -18,8 +17,7 @@ const Customers = () => {
 
   const [updateModal, setUpdateModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState(false);
-  const [selectedRecord, setSelectedRecord] = useState(null); // Store full record, not just customer
-
+  const [selectedRecord, setSelectedRecord] = useState(null); 
   useEffect(() => {
     if (status === "idle") {
       dispatch(fetchData());
@@ -30,13 +28,13 @@ const Customers = () => {
     setCurrentPage(value);
   };
 
-  // Flatten customers from all records
   const allCustomers = data.flatMap((record) =>
     record.customers.map((customer) => ({
       ...customer,
-      record, // Include the full record for reference
+      record,
     }))
   );
+
 
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedCustomers = allCustomers.slice(
@@ -45,13 +43,11 @@ const Customers = () => {
   );
 
   const handleEditCustomer = (customer) => {
-    // Pass the entire record to the modal
     setSelectedRecord(customer.record);
     setUpdateModal(true);
   };
 
   const handleDeleteCustomer = (customer) => {
-    // Pass the entire record to the modal
     setSelectedRecord(customer.record);
     setDeleteModal(true);
   };
