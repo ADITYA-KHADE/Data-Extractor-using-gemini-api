@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
+
 import { toast } from "react-hot-toast";
-import { fetchData } from "../../Store/Slice"; // Import the correct thunk
+import { fetchData } from "../../Store/Slice"; 
 
 const FileUpload = () => {
   const [isLoading, setIsLoading] = useState(false);

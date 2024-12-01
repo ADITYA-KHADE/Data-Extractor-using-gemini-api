@@ -1,8 +1,6 @@
-// src/slices/dataSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Async thunk to fetch data
 export const fetchData = createAsyncThunk('data/fetchData', async () => {
   const response = await axios.get('/api/data/getdata');
   return response.data;
@@ -12,7 +10,7 @@ const dataSlice = createSlice({
   name: 'data',
   initialState: {
     data: [],
-    status: 'idle', // 'idle' | 'loading' | 'succeeded' | 'failed'
+    status: 'idle', 
     error: null,
   },
   reducers: {},

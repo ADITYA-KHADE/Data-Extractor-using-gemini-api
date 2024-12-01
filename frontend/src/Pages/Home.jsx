@@ -52,9 +52,9 @@ const Home = () => {
 
       <div className="p-4 rounded shadow">
         {activeTab === "UploadReceipt" && <FileUpload />}
-        {activeTab === "Invoices" && <Invoices invoices={data} />}
-        {activeTab === "Products" && <Products products={data} />}
-        {activeTab === "Customers" && <Customers customers={data} />}
+        {activeTab === "Invoices" && <Invoices />}
+        {activeTab === "Products" && <Products />}
+        {activeTab === "Customers" && <Customers />}
         {!tabs.some((tab) => tab.id === activeTab) && (
           <div className="text-gray-500">Please select a valid tab.</div>
         )}

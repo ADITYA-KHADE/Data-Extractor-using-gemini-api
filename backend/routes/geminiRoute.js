@@ -3,7 +3,7 @@ const multer = require("multer");
 const upload = multer({ dest: "backend/uploads/" });
 
 const {
-  getdata, // get all data
+  getdata, 
   updatedata,
   deletedata,
   uploadfile,

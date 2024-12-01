@@ -576,7 +576,6 @@ const uploadfile = async (req, res) => {
     console.log("Extracted JSON Data:", jsonData);
 
     if (jsonData.total > 1) {
-      // Loop through multiple customer data entries
       for (const customerData of jsonData.data) {
         try {
           const receipt = new Receipt({
