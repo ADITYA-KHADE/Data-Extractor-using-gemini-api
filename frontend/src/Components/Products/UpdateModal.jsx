@@ -31,7 +31,7 @@ const UpdateModal = ({ data, setUpdateModal }) => {
     const unitPrice = parseFloat(product.unitPrice || 0);
     const tax = parseFloat(product.tax || 0);
     const totalPrice = quantity * unitPrice + tax;
-    return totalPrice.toFixed(2); 
+    return totalPrice.toFixed(2);
   };
 
   const recalculateFields = (updated) => {
@@ -46,12 +46,13 @@ const UpdateModal = ({ data, setUpdateModal }) => {
     );
     const totalAmount = updated
       .reduce((acc, p) => acc + (parseFloat(p.priceWithTax) || 0), 0)
-      .toFixed(2); 
+      .toFixed(2);
     setInvoiceUpdates((prev) => ({
-      ...prev,git ls-files | grep '\.js' | xargs wc -l
+      ...prev,
       productNames,
       totalquantity: totalQuantity,
       totaltax: totalTax.toFixed(2), // Ensure 2 decimal places for tax
+      totalamount: totalAmount,
     }));
 
     setCustomerUpdates((prev) => ({
@@ -106,7 +107,12 @@ const UpdateModal = ({ data, setUpdateModal }) => {
   };
 
   return (
-    <Dialog open={true} onClose={() => setUpdateModal(false)} fullWidth maxWidth="md">
+    <Dialog
+      open={true}
+      onClose={() => setUpdateModal(false)}
+      fullWidth
+      maxWidth="md"
+    >
       <DialogTitle>Update Products</DialogTitle>
       <DialogContent>
         {updatedProducts.map((product, index) => (
@@ -117,14 +123,18 @@ const UpdateModal = ({ data, setUpdateModal }) => {
             <TextField
               label="Product Name"
               value={product.productname || ""}
-              onChange={(e) => handleProductChange(index, "productname", e.target.value)}
+              onChange={(e) =>
+                handleProductChange(index, "productname", e.target.value)
+              }
               fullWidth
               margin="normal"
             />
             <TextField
               label="Quantity"
               value={product.quantity || ""}
-              onChange={(e) => handleProductChange(index, "quantity", e.target.value)}
+              onChange={(e) =>
+                handleProductChange(index, "quantity", e.target.value)
+              }
               fullWidth
               margin="normal"
               type="number"
@@ -132,7 +142,9 @@ const UpdateModal = ({ data, setUpdateModal }) => {
             <TextField
               label="Unit Price"
               value={product.unitPrice || ""}
-              onChange={(e) => handleProductChange(index, "unitPrice", e.target.value)}
+              onChange={(e) =>
+                handleProductChange(index, "unitPrice", e.target.value)
+              }
               fullWidth
               margin="normal"
               type="number"
@@ -140,7 +152,9 @@ const UpdateModal = ({ data, setUpdateModal }) => {
             <TextField
               label="Tax"
               value={product.tax || ""}
-              onChange={(e) => handleProductChange(index, "tax", e.target.value)}
+              onChange={(e) =>
+                handleProductChange(index, "tax", e.target.value)
+              }
               fullWidth
               margin="normal"
               type="number"
