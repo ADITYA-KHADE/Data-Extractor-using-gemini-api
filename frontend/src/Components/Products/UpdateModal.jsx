@@ -48,16 +48,14 @@ const UpdateModal = ({ data, setUpdateModal }) => {
       .reduce((acc, p) => acc + (parseFloat(p.priceWithTax) || 0), 0)
       .toFixed(2); 
     setInvoiceUpdates((prev) => ({
-      ...prev,
+      ...prev,git ls-files | grep '\.js' | xargs wc -l
       productNames,
       totalquantity: totalQuantity,
       totaltax: totalTax.toFixed(2), // Ensure 2 decimal places for tax
-      totalAmount,
     }));
 
     setCustomerUpdates((prev) => ({
       ...prev,
-      totalAmount,
     }));
   };
 
