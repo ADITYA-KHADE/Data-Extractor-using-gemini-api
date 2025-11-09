@@ -142,7 +142,7 @@ const uploadfile = async (req, res) => {
         `Uploaded CSV file ${uploadResponse.file.displayName} as: ${uploadResponse.file.uri}`
       );
 
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
       const result = await retryAsync(
         async () =>
           await model.generateContent([
@@ -377,7 +377,7 @@ const uploadfile = async (req, res) => {
       `Uploaded file ${uploadResponse.file.displayName} as: ${uploadResponse.file.uri}`
     );
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await retryAsync(
       async () =>
         await model.generateContent([
